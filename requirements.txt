@@ -1,0 +1,5 @@
+pandas
+yfinance
+pytz
+pymysql
+mysqlclient

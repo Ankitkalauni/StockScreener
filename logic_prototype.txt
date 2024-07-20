@@ -60,6 +60,11 @@ By following this system design, you can create a robust stockscreener capable o
 
 
 
+prompt 
+
+i have a python script which can get the new data from yahoo api from the date range between last run and current time. i am storing the last run time in config.json file and reading in the python file. i want to scedule this code using airlfow. could you help me how to do this. and is airflow suitable for this or any other service will work. actually this is my data engineer project. i can give you more context if you want. i want you help to build this project
+
+
 
 
 
