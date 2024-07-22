@@ -1,5 +1,5 @@
-pandas
-yfinance
-pytz
-pymysql
-mysqlclient
+pandas=1.3.5
+yfinance=0.2.41
+pytz=2022.5
+pymysql=1.1.1
+mysqlclient=2.1.1
