@@ -1,1 +1,3 @@
-{"last_update": "2024-07-20T08:23:01.514973"}
+{"last_update": "2024-07-20T08:23:01.514973",
+"bucket_name" : "symboldatabucket86",
+"object_key" : "symboldata/all_symbols_data.parquet"}
