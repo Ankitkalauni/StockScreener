@@ -172,7 +172,7 @@ if __name__ == '__main__':
         nse = Nse_data_dumper(logger, log_file_obj)
 
         start_date = nse.last_update
-        end_date = datetime.today()
+        end_date = datetime.now(timezone("Asia/Kolkata"))
 
         if start_date.date() == end_date.date():
             logger.log(log_file_obj, f"No data to update. Start and end dates are the same: {start_date.date()}")
@@ -183,7 +183,7 @@ if __name__ == '__main__':
         
         temp_df = pd.DataFrame([], columns=nse.cols)
 
-        for i, symbol in enumerate(symbols[:5]):
+        for i, symbol in enumerate(symbols):
             try:
                 temp_df = pd.concat([temp_df, nse.DataExtract(symbol+'.NS', start_date, end_date)], ignore_index=1)
 
@@ -193,6 +193,8 @@ if __name__ == '__main__':
             except Exception as e:
                 logger.log(log_file_obj, f"{i}. {symbol} iteration failed: {e}")
         
+        if temp_df.shape[0] == 0 or temp_df is None:
+            exit(69+1)
         temp_df = temp_df[nse.new_cols]
         temp_df['Close'] = temp_df['Close'].astype(int)
         temp_df['Date'] = pd.to_datetime(temp_df['Date'], errors='coerce')

@@ -11,35 +11,6 @@ LOCATION 's3://symboldatabucket86/symboldata/';
 SELECT * from stockdb.symbol_data;
 
 
-/*
-Logic: will add in future ;)
-*/
-
-WITH temp_max_vol AS (
-    SELECT symbol AS _symbol, approx_percentile(close, 0.5) AS median_price, max(volume) AS _volume,
-    min(close) AS min_price, max(close) AS max_price
-    FROM stockdb.symbol_data
-    WHERE ts BETWEEN date_add('day', -64, current_date) AND date_add('day', -3, current_date)
-    GROUP BY symbol
-), 
-_temp_max_vol AS (
-    SELECT *, ((max_price - min_price) / min_price) AS diff_price
-    FROM temp_max_vol
-) 
-SELECT a.*
-FROM stockdb.symbol_data a 
-INNER JOIN _temp_max_vol b 
-ON a.symbol = b._symbol
-WHERE a.ts BETWEEN date_add('hour', 6, date_add('day', -3, current_date)) AND current_date
-    AND a.volume > b._volume AND a.close > b.median_price;
-
-
-
-
-
-
-
-
 
 
 --------------- testing (SparkSQL) --------------------------

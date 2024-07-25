@@ -4,3 +4,4 @@ pytz
 pymysql
 mysqlclient
 boto3
+apache-airflow-providers-amazon
