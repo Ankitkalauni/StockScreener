@@ -1,4 +1,5 @@
 version: '3.8'
+
 x-airflow-common:
   &airflow-common
   image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.4.2}
@@ -23,8 +24,6 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/scripts:/opt/airflow/scripts
     - ${AIRFLOW_PROJ_DIR:-.}/output_data:/opt/airflow/output_data
     - ${AIRFLOW_PROJ_DIR:-.}/requirements.txt:/opt/airflow/requirements.txt
-    - /c/Users/ankit.ka/.aws:/.aws
-
   user: "${AIRFLOW_UID}:0"
 
 services:
@@ -41,6 +40,37 @@ services:
       interval: 5s
       retries: 5
     restart: always
+
+  spark-master:
+    image: bitnami/spark:latest
+    hostname: spark-master
+    container_name: spark-master
+    environment:
+      SPARK_MODE: master
+      SPARK_MASTER_HOST: spark-master
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION}
+    volumes:
+      - ${AIRFLOW_PROJ_DIR:-.}/spark_code:/spark_code
+    ports:
+      - 7077:7077
+      - 8081:8080
+    networks:
+      - airflow_spark_network
+
+  spark-worker:
+    image: bitnami/spark:latest
+    depends_on:
+      - spark-master
+    environment:
+      SPARK_MODE: worker
+      SPARK_MASTER_URL: spark://spark-master:7077
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION}
+    networks:
+      - airflow_spark_network
 
   airflow-webserver:
     <<: *airflow-common
@@ -122,6 +152,10 @@ services:
         fi
         mkdir -p /sources/logs /sources/dags /sources/plugins
         chown -R "${AIRFLOW_UID}:0" /sources/{logs,dags,plugins}
+
+      - |
+        pip install --upgrade pip
+      - |
         exec /entrypoint airflow version
     environment:
       <<: *airflow-common-env
@@ -133,6 +167,9 @@ services:
     user: "0:0"
     volumes:
       - ${AIRFLOW_PROJ_DIR:-.}:/sources
+
+networks:
+  airflow_spark_network:
 
 volumes:
   airflow-db-volume:
