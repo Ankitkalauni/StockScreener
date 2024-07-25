@@ -129,6 +129,7 @@ class Nse_data_dumper:
             return True
         except ClientError as e:
             if e.response['Error']['Code'] == '404':
+                self.logger.log(self.log_file_obj, f'Error while checking for object in S3: -- Code 404 -- {e}')
                 return False
             else:
                 # For any other error code, re-raise the exception
@@ -139,8 +140,11 @@ class Nse_data_dumper:
         try:
             if self._check_file_exists(bucket_name=self.s3bucket_name, object_key=self.s3object_key):
                 main_df = self.get_S3data()
+                self.logger.log(self.log_file_obj, f"loaded dataframe shape {main_df.shape}")
                 df_merged = pd.concat([main_df, df_input], ignore_index=True)
             else:
+
+                self.logger.log(self.log_file_obj, f"No file found on s3 pushing new file instead")
                 df_merged = df_input
 
             df_merged = df_merged.drop_duplicates()
