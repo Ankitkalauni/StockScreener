@@ -45,3 +45,15 @@ AWS_DEFAULT_REGION=ap-south-1
 ```
 and add this variable to the docker compose file
 6.install boto3 or add to the req file
+7. add spark image to the docker-compose file and add the aws access key to the env variable and create a network to interact with containers.
+8. if getting error while reading the data from s3 to the pyspark. try to see the aws configs, if need add a jar or edit the `spark-defaults.conf` and use `s3a://` as hadoop aws uses this.
+
+```
+# Define the S3 path
+s3_path = "s3a://symboldatabucket86/symboldata/all_symbols_data.parquet"
+
+# Read data from S3
+df = spark.read.parquet(s3_path)
+```
+
+9. if using ec2 instance we can use IAM roles.

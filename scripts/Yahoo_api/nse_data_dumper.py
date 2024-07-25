@@ -135,7 +135,7 @@ class Nse_data_dumper:
                 self.logger.log(self.log_file_obj, f'Error while checking for object in S3: {e}')
                 raise
 
-    def merge_and_export(self, df_input, file_path):
+    def merge_and_export(self, df_input):
         try:
             if self._check_file_exists(bucket_name=self.s3bucket_name, object_key=self.s3object_key):
                 main_df = self.get_S3data()
@@ -146,10 +146,10 @@ class Nse_data_dumper:
             df_merged = df_merged.drop_duplicates()
             
             six_months_ago = datetime.now(timezone("Asia/Kolkata")) - timedelta(days=6*30)
-            df_merged = df_merged[df_merged['Date'] >= pd.to_datetime(six_months_ago).strftime('%Y-%m-%d %H:%M:%S.%f')]
+            df_merged = df_merged[df_merged['ts'] >= pd.to_datetime(six_months_ago).strftime('%Y-%m-%d %H:%M:%S.%f')]
 
             if self._put_S3data(df_merged):
-                self.logger.log(self.log_file_obj, f"Data merged, cleaned, and exported successfully to {file_path}")
+                self.logger.log(self.log_file_obj, f"Data merged, cleaned, and exported successfully to {self.s3bucket_name}")
             else:
                 raise Exception('An error occurred while uploading the new object to S3')
         except Exception as e:
@@ -192,11 +192,11 @@ if __name__ == '__main__':
         temp_df = temp_df[nse.new_cols]
         temp_df['Close'] = temp_df['Close'].astype(int)
         temp_df['Date'] = pd.to_datetime(temp_df['Date'], errors='coerce')
-
+        temp_df.rename(columns={'Date':'ts'}, inplace = True)
         logger.log(log_file_obj, f"After running all symbols, dataframe shape: {temp_df.shape}")
 
         try:
-            nse.merge_and_export(temp_df, '../all_symbols_data.parquet')
+            nse.merge_and_export(temp_df)
             nse.update_lastupdate(end_date)
         except Exception as e:
             logger.log(log_file_obj, f"New Parquet file creation failed: {e}")
