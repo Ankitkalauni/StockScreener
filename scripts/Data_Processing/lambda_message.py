@@ -14,7 +14,7 @@ def format_percentage(value):
 def construct_message(data):
     message = ""
     for item in data:
-        increased_price = item['max_breakout_price'] - item['median_price']
+        
         message += f"""
         {item['symbol']}:
         
@@ -22,29 +22,29 @@ def construct_message(data):
         
         Max Price Difference: {format_percentage(item['max_price_diff'])}
         
-        Max Breakout Volume: {item['max_breakout_volume']:,}
+        Volume Increase from Median Volume: {item['max_volume_diff']:.2f}%
         
         Max Breakout Price: {item['max_breakout_price']}
         
-        Median Price: {item['median_price']}
+        Max Breakout Volume: {item['max_breakout_volume']:,}
         
-        Increased Price: {item['max_breakout_price']} - {item['median_price']} = {increased_price}
+        Min Median Max Price: {item['min_price']} | {item['median_price']} | {item['max_price']}
+                
         \n"""
         
     return message.strip()
 
 def lambda_handler(event, context):
-    # Get bucket and file key from the S3 event
     bucket_name = event['Records'][0]['s3']['bucket']['name']
     file_key = event['Records'][0]['s3']['object']['key']
 
-    # Read the file content
+
     response = s3_client.get_object(Bucket=bucket_name, Key=file_key)
     content = response['Body'].read().decode('utf-8-sig').splitlines()
 
     csv_reader = csv.DictReader(content)
     
-    # Extract and process data
+
     data = []
     for row in csv_reader:
         data.append({
@@ -54,12 +54,13 @@ def lambda_handler(event, context):
             'max_breakout_volume': int(row['max_breakout_volume']),
             'max_breakout_price': float(row['max_breakout_price']),
             'median_price': float(row['median_price']),
+            'max_volume_diff': float(row['max_volume_diff']),
+            'max_price': float(row['max_price']),
+            'min_price': float(row['min_price']),
         })
 
-    # Construct the message
     message = construct_message(data)
 
-    # Publish the message to SNS
     sns_client.publish(
         TopicArn=sns_topic_arn,
         Subject=f"Stock Breakout Analysis: {datetime.now().date()}",

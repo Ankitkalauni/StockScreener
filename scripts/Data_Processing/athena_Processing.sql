@@ -39,13 +39,13 @@ _temp_vbreakout AS (
             AND current_date
         AND a.volume > b._volume 
         AND a.close > b.median_price
-)
-SELECT 
+), tempfinal as 
+(SELECT 
     symbol, 
     COUNT(1) AS breakout_cnt,
-    MAX((close - median_price) / median_price) AS max_price_diff,
+    MAX((close - median_price) / median_price)*100 AS max_price_diff,
     MAX(volume) AS max_breakout_volume,
-    MAX((volume - _volume) / volume) AS max_volume_diff,
+    MAX((volume - _volume) / _volume)*100 AS max_volume_diff,
     MAX(close) AS max_breakout_price,
     MIN_BY(min_price, row_num) AS min_price,
     MIN_BY(max_price, row_num) AS max_price,
@@ -56,4 +56,7 @@ FROM
 GROUP BY 
     symbol
 HAVING 
-    date(max(ts)) = current_date;
+    date(max(ts)) = current_date)
+    
+    SELECT * from tempfinal
+    order by breakout_cnt desc LIMIT 5;
